@@ -1,0 +1,66 @@
+version: "3.8"
+
+networks:
+  local:
+    name: keycloak-ha-network
+    driver: bridge
+
+volumes:
+  postgres_data:
+    name: postgres-ha-volume
+    driver: local
+  keycloak_data:
+    name: keycloak-ha-volume
+    driver: local
+
+services:
+  postgres:
+    container_name: postgres-ha
+    image: postgres
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: keycloak
+      POSTGRES_USER: keycloak
+      POSTGRES_PASSWORD: password
+    networks:
+      - local
+    ports: 
+      - 15432:5432
+  pgadmin4:
+    container_name: pgadmin4-ha
+    image: dpage/pgadmin4
+    environment:
+      PGADMIN_DEFAULT_EMAIL: "andremoriya@gmail.com"
+      PGADMIN_DEFAULT_PASSWORD: "adminadmin"
+    ports:
+      - 25432:80
+    depends_on:
+      - postgres
+    networks:
+      - local
+  keycloak:
+    container_name: keycloak-ha-server
+    image: quay.io/keycloak/keycloak:10.0.2
+    command: ["-c", "standalone-ha.xml", "-b", "0.0.0.0", "-bmanagement", "0.0.0.0"]
+    volumes:
+      - keycloak_data:/opt/jboss/keycloak
+    environment:
+      PROXY_ADDRESS_FORWARDING: "true"
+      DB_VENDOR: POSTGRES
+      DB_ADDR: postgres
+      DB_DATABASE: keycloak
+      DB_USER: keycloak
+      DB_SCHEMA: public
+      DB_PASSWORD: password
+      # KEYCLOAK_USER: keycloak
+      # KEYCLOAK_PASSWORD: keycloak
+      #Uncomment the line below if you want to specify JDBC parameters. The parameter below is just an example, and it shouldn't be used in production without knowledge. It is highly recommended that you read the PostgreSQL JDBC driver documentation in order to use it.
+      #JDBC_PARAMS: "ssl=true"
+    ports:
+      - 1004:8080
+      - 1005:9990
+    depends_on:
+      - postgres
+    networks:
+      - local

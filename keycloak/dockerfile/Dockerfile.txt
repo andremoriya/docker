@@ -1,0 +1,40 @@
+FROM postgres:latest as postgres
+
+VOLUME [ "/var/lib/postgresql/data" ]
+
+CMD [ "docker network create", "--driver", "bridge postgres"]
+
+ENV POSTGRES_DB=keycloak
+ENV POSTGRES_USER=keycloak
+ENV POSTGRES_PASSWORD=password
+
+EXPOSE 5432
+
+ENTRYPOINT [ "/docker-entrypoint.sh" ]
+
+FROM dpage/pgadmin4:latest as pgadmin4
+
+ENV PGADMIN_DEFAULT_EMAIL="andremoriya@gmail.com"
+ENV PGADMIN_DEFAULT_PASSWORD="adminadmin"
+
+EXPOSE 16543:80
+
+ENTRYPOINT [ "/entrypoint.sh" ]
+
+FROM quay.io/keycloak/keycloak:latest as keycloak
+
+VOLUME [ "/opt/jboss/keycloak" ]
+
+ENV PROXY_ADDRESS_FORWARDING="true"
+ENV DB_VENDOR=POSTGRES
+ENV DB_ADDR=postgres
+ENV DB_DATABASE=keycloak
+ENV DB_USER=keycloak
+ENV DB_PASSWORD=password
+ENV KEYCLOAK_USER=keycloak
+ENV KEYCLOAK_PASSWORD=keycloak
+
+EXPOSE 8080:8080
+EXPOSE 9990:9990
+
+ENTRYPOINT [ "/opt/jboss/tools/docker-entrypoint.sh", "-b", "0.0.0.0", "-bmanagement", "0.0.0.0" ]

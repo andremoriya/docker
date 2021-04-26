@@ -1,0 +1,28 @@
+version: '3.8'
+
+volumes:
+  mysql_data:
+      name: mysql_volume
+      driver: local
+
+networks: 
+    local:
+      name: localhost
+      external: true
+      
+services:
+  mysql_db:
+      image: mysql:5.7
+      container_name: mysql5-base
+      command: ['mysqld', '--character-set-server=utf8', '--collation-server=utf8_unicode_ci', '--bind-address=0.0.0.0', "--default-authentication-plugin=mysql_native_password"]
+      environment:
+        MYSQL_ROOT_PASSWORD: root
+        MYSQL_DATABASE: keycloak
+        MYSQL_USER: keycloak
+        MYSQL_PASSWORD: password
+      volumes: 
+        - mysql_data:/var/lib/mysql
+      ports:
+        - 3306:3306
+      networks:
+        - local

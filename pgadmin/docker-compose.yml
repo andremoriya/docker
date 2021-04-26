@@ -1,0 +1,25 @@
+version: '3.8'
+
+networks: 
+  local:
+    name: localhost
+    external: true
+
+volumes:
+  pgadmin4_data:
+    name: pgadmin4-data
+    driver: local
+
+services:
+  pgadmin4:
+    container_name: pgadmin4-service
+    image: dpage/pgadmin4
+    volumes: 
+      - pgadmin4_data:/var/lib/pgadmin4/data
+    environment:
+      PGADMIN_DEFAULT_EMAIL: "andremoriya@gmail.com"
+      PGADMIN_DEFAULT_PASSWORD: "password"
+    ports:
+      - "16543:80"
+    networks:
+      - local
